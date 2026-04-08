@@ -119,6 +119,9 @@ td:first-child{padding:4px 10px;text-align:left;font-family:var(--mono);font-siz
 .empty-state{text-align:center;padding:40px;color:var(--dim)}
 .reset-btn{padding:8px 16px;border-radius:8px;border:1px solid #ef444433;background:#450a0a22;color:#ef4444;font-size:11px;font-weight:600;cursor:pointer;margin-top:20px}
 .hidden{display:none!important}
+td[draggable]{cursor:grab}
+td[draggable]:active{cursor:grabbing}
+td.dnd-over .slot-btn{outline:2px solid var(--yellow)!important;border-radius:5px}
 @media(max-width:640px){.stats-inner{gap:10px}.header-inner{gap:8px}.tabs{flex-wrap:wrap}}
 </style>
 </head>
@@ -294,6 +297,23 @@ let activeDay="Maanantai";
 let activeView="grid";
 let custSearch="",custFilter="all",wlSearch="";
 let dbReady=false;
+let _dndSrc=null;
+
+function dndStart(e,loc,day,time,court){_dndSrc=`${loc}|${day}|${time}|${court}`;e.dataTransfer.effectAllowed='move';e.currentTarget.style.opacity='0.3'}
+function dndEnd(e){e.currentTarget.style.opacity='';document.querySelectorAll('td.dnd-over').forEach(el=>el.classList.remove('dnd-over'))}
+function dndOver(e){e.preventDefault();e.dataTransfer.dropEffect='move'}
+function dndEnter(e){e.preventDefault();e.currentTarget.classList.add('dnd-over')}
+function dndLeave(e){e.currentTarget.classList.remove('dnd-over')}
+function dndDrop(e,loc,day,time,court){
+  e.preventDefault();e.currentTarget.classList.remove('dnd-over');
+  const dstKey=`${loc}|${day}|${time}|${court}`;
+  if(!_dndSrc||_dndSrc===dstKey){_dndSrc=null;return}
+  const src=slots[_dndSrc]?{...slots[_dndSrc]}:{status:'free',customer:'',notes:''};
+  const dst=slots[dstKey]?{...slots[dstKey]}:{status:'free',customer:'',notes:''};
+  if(src.status==='free'&&!src.customer&&!src.notes)delete slots[dstKey];else slots[dstKey]=src;
+  if(dst.status==='free'&&!dst.customer&&!dst.notes)delete slots[_dndSrc];else slots[_dndSrc]=dst;
+  _dndSrc=null;saveSlots();render()
+}
 
 function esc(s){const d=document.createElement("div");d.textContent=s;return d.innerHTML}
 function fmt(n){return n.toLocaleString("fi-FI")}
@@ -371,7 +391,7 @@ function renderGrid(st){
     for(let ti=0;ti<TIMES.length;ti++){const time=TIMES[ti],isPrime=getPriceCat(activeDay,time.split("-")[0])==="prime";
       h+=`<tr style="background:${isPrime?"#FFF20004":ti%2===0?"var(--bg)":"#0c0c0e"}"><td style="color:${isPrime?"var(--yellow)":"var(--dim)"};font-weight:${isPrime?600:400}">${time}${isPrime?"<span style='margin-left:3px;font-size:8px'>★</span>":""}</td>`;
       for(const c of courts){const sl=getSlot(loc,activeDay,time,c),cfg=ST[sl.status],key=`${loc}|${activeDay}|${time}|${c}`,wlc=getWl(key).length;
-        h+=`<td><button class="slot-btn" style="background:${cfg.bg};color:${cfg.color};border:1px solid ${cfg.color}18" onclick="openModal('${esc(loc)}','${activeDay}','${time}',${c})">`;
+        h+=`<td draggable="true" ondragstart="dndStart(event,'${esc(loc)}','${activeDay}','${time}',${c})" ondragend="dndEnd(event)" ondragover="dndOver(event)" ondragenter="dndEnter(event)" ondragleave="dndLeave(event)" ondrop="dndDrop(event,'${esc(loc)}','${activeDay}','${time}',${c})"><button class="slot-btn" style="background:${cfg.bg};color:${cfg.color};border:1px solid ${cfg.color}18" onclick="openModal('${esc(loc)}','${activeDay}','${time}',${c})">`;
         if(sl.customer){h+=`<span>${esc(sl.customer)}</span>`;if(sl.notes)h+=`<span style="font-size:8px;opacity:.4;font-weight:400">${esc(sl.notes.substring(0,18))}</span>`}else h+=`<span style="opacity:.2;font-size:9px">—</span>`;
         if(wlc>0)h+=`<span class="wl-badge">${wlc}</span>`;h+=`</button></td>`}h+=`</tr>`}
     h+=`</tbody></table></div>`}
