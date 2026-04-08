@@ -327,7 +327,15 @@ function initApp(){
   // Listen for slots
   db.ref("vakiovuorot/slots").on("value", snap => {
     const val = snap.val();
-    if (val) { slots = val; }
+    if (val) {
+      slots = val;
+      let changed=false;
+      for(const loc of Object.keys(LOCS))for(const c of LOCS[loc])for(const t of TIMES){
+        const k=`${loc}|Perjantai|${t}|${c}`;
+        if(!slots[k]||slots[k].status==='free'){slots[k]={status:'notForSale',customer:'',notes:''};changed=true}
+      }
+      if(changed)db.ref("vakiovuorot/slots").set(slots);
+    }
     else { slots = buildInit(); db.ref("vakiovuorot/slots").set(slots); }
     dbReady = true;
     render();
