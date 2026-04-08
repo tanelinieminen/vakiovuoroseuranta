@@ -322,23 +322,50 @@ function getSlot(l,d,t,c){return slots[`${l}|${d}|${t}|${c}`]||{status:"free",cu
 function getWl(key){return waitlist[key]||[]}
 function totalWl(){return Object.values(waitlist).reduce((s,l)=>s+l.length,0)}
 
+// ─── MIGRAATIOT ───
+// Lisää uusi migraatio tänne omalla id:llä. Jokainen ajetaan vain kerran.
+const MIGRATIONS = {
+  'v1_pending_kaikki': function() {
+    // buildInit() asettaa jo pending — ei tarvitse tehdä mitään olemassa oleville
+    return false;
+  },
+  'v2_perjantai_ei_myynta': function() {
+    let changed = false;
+    for(const loc of Object.keys(LOCS))for(const c of LOCS[loc])for(const t of TIMES){
+      const k=`${loc}|Perjantai|${t}|${c}`;
+      if(!slots[k]||slots[k].status==='free'){slots[k]={status:'notForSale',customer:'',notes:''};changed=true}
+    }
+    return changed;
+  }
+};
+
+function runMigrations(applied) {
+  let slotsChanged = false;
+  const newlyApplied = {};
+  for(const [id, fn] of Object.entries(MIGRATIONS)) {
+    if(applied[id]) continue; // jo ajettu, ohita
+    const changed = fn();
+    if(changed) slotsChanged = true;
+    newlyApplied[id] = true;
+  }
+  if(slotsChanged) db.ref("vakiovuorot/slots").set(slots);
+  if(Object.keys(newlyApplied).length) db.ref("vakiovuorot/migrations").update(newlyApplied);
+}
+
 // ─── FIREBASE SYNC ───
 function initApp(){
-  // Listen for slots
-  db.ref("vakiovuorot/slots").on("value", snap => {
+  // Lataa slots, aja migraatiot kerran, kuuntele muutoksia
+  db.ref("vakiovuorot/slots").once("value", snap => {
     const val = snap.val();
-    if (val) {
-      slots = val;
-      let changed=false;
-      for(const loc of Object.keys(LOCS))for(const c of LOCS[loc])for(const t of TIMES){
-        const k=`${loc}|Perjantai|${t}|${c}`;
-        if(!slots[k]||slots[k].status==='free'){slots[k]={status:'notForSale',customer:'',notes:''};changed=true}
-      }
-      if(changed)db.ref("vakiovuorot/slots").set(slots);
-    }
-    else { slots = buildInit(); db.ref("vakiovuorot/slots").set(slots); }
-    dbReady = true;
-    render();
+    slots = val || buildInit();
+    if(!val) db.ref("vakiovuorot/slots").set(slots);
+    db.ref("vakiovuorot/migrations").once("value", mSnap => {
+      runMigrations(mSnap.val() || {});
+      dbReady = true;
+      render();
+      // Kuuntele reaaliaikaisesti migraatioiden jälkeen
+      db.ref("vakiovuorot/slots").on("value", s => { slots = s.val() || {}; render(); });
+    });
   });
   // Listen for waitlist
   db.ref("vakiovuorot/waitlist").on("value", snap => {
