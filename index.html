@@ -389,13 +389,15 @@ function flashSaved(){
 }
 
 // ─── ANALYTICS ───
+const PRIME_TIMES=["16:30-18:00","18:00-19:30","19:30-21:00"];
 function calcStats(){
-  const st={total:0,booked:0,pending:0,notContinuing:0,notForSale:0,free:0,revM:0,revS:0,byLoc:{},byDay:{}};
+  const st={total:0,booked:0,pending:0,notContinuing:0,notForSale:0,free:0,revM:0,revS:0,byLoc:{},byDay:{},prime:{total:0,booked:0,pending:0,notForSale:0}};
   for(const loc of Object.keys(LOCS))st.byLoc[loc]={total:0,booked:0,pending:0,free:0,notContinuing:0,notForSale:0,m:0,s:0};
   for(const day of DAYS)st.byDay[day]={total:0,booked:0,pending:0,free:0,notContinuing:0,notForSale:0,m:0,s:0};
   for(const loc of Object.keys(LOCS))for(const day of DAYS)for(const time of TIMES)for(const c of LOCS[loc]){
     const sl=getSlot(loc,day,time,c);st.total++;st[sl.status]++;
     st.byLoc[loc].total++;st.byLoc[loc][sl.status]++;st.byDay[day].total++;st.byDay[day][sl.status]++;
+    if(PRIME_TIMES.includes(time)){st.prime.total++;if(sl.status==="notForSale")st.prime.notForSale++;else if(sl.status==="booked")st.prime.booked++;else if(sl.status==="pending")st.prime.pending++}
     if(sl.status==="booked"||sl.status==="pending"){const p=PRICES[getPriceCat(day,time.split("-")[0])];if(p){st.revM+=p.monthly;st.revS+=p.season;st.byLoc[loc].m+=p.monthly;st.byLoc[loc].s+=p.season;st.byDay[day].m+=p.monthly;st.byDay[day].s+=p.season}}
   }
   return st;
@@ -436,8 +438,9 @@ function renderGrid(st){
 
 function renderAnalytics(st){
   const sell=st.total-st.notForSale,occ=sell>0?((st.booked+st.pending)/sell*100):0,conf=sell>0?(st.booked/sell*100):0;
+  const primeSell=st.prime.total-st.prime.notForSale,primeOcc=primeSell>0?((st.prime.booked+st.prime.pending)/primeSell*100):0;
   let h=`<div class="kpi-grid">`;
-  [{l:"Varausaste",v:`${occ.toFixed(1)}%`,c:"#22c55e",s:`${st.booked+st.pending} / ${sell}`},{l:"Vahvistettu",v:`${conf.toFixed(1)}%`,c:"#3b82f6",s:`${st.booked} vuoroa`},{l:"Odottaa",v:st.pending,c:"#facc15",s:"vuoroa"},{l:"Ei jatka",v:st.notContinuing,c:"#ef4444",s:"vapautuu"},{l:"Liikevaihto / kk",v:`${fmt(st.revM)} €`,c:"var(--yellow)",s:"sis. odottaa"},{l:"Liikevaihto / kausi",v:`${fmt(st.revS)} €`,c:"var(--yellow)",s:"11 kk"},{l:"Jonossa",v:totalWl(),c:"#a855f7",s:`${Object.keys(waitlist).length} vuoroa kiinnostaa`}].forEach(k=>{h+=`<div class="kpi"><div class="kpi-label">${k.l}</div><div class="kpi-value" style="color:${k.c}">${k.v}</div><div class="kpi-sub">${k.s}</div></div>`});
+  [{l:"Varausaste",v:`${occ.toFixed(1)}%`,c:"#22c55e",s:`${st.booked+st.pending} / ${sell}`},{l:"Primetime 16:30–21:00",v:`${primeOcc.toFixed(1)}%`,c:"#f97316",s:`${st.prime.booked+st.prime.pending} / ${primeSell} vuoroa`},{l:"Vahvistettu",v:`${conf.toFixed(1)}%`,c:"#3b82f6",s:`${st.booked} vuoroa`},{l:"Odottaa",v:st.pending,c:"#facc15",s:"vuoroa"},{l:"Ei jatka",v:st.notContinuing,c:"#ef4444",s:"vapautuu"},{l:"Liikevaihto / kk",v:`${fmt(st.revM)} €`,c:"var(--yellow)",s:"sis. odottaa"},{l:"Liikevaihto / kausi",v:`${fmt(st.revS)} €`,c:"var(--yellow)",s:"11 kk"},{l:"Jonossa",v:totalWl(),c:"#a855f7",s:`${Object.keys(waitlist).length} vuoroa kiinnostaa`}].forEach(k=>{h+=`<div class="kpi"><div class="kpi-label">${k.l}</div><div class="kpi-value" style="color:${k.c}">${k.v}</div><div class="kpi-sub">${k.s}</div></div>`});
   h+=`</div><div class="section-card"><div class="section-title">Toimipisteittäin</div><div class="loc-cards">`;
   for(const[loc,s]of Object.entries(st.byLoc)){const ls=s.total-(s.notForSale||0),lr=ls>0?((s.booked+(s.pending||0))/ls*100):0;
     h+=`<div class="loc-card"><div style="display:flex;justify-content:space-between;margin-bottom:10px"><span style="font-weight:700;font-size:14px">${loc}</span><span style="font-size:20px;font-weight:800;color:var(--yellow);font-family:var(--mono)">${lr.toFixed(0)}%</span></div><div class="progress-bar"><div style="width:${(s.booked/(ls||1))*100}%;background:#22c55e"></div><div style="width:${((s.pending||0)/(ls||1))*100}%;background:#facc15"></div><div style="width:${((s.notContinuing||0)/(ls||1))*100}%;background:#ef4444"></div></div><div class="loc-stats"><div><span style="color:#22c55e">●</span> Myyty: <b>${s.booked}</b></div><div><span style="color:#facc15">●</span> Odottaa: <b>${s.pending||0}</b></div><div><span style="color:#ef4444">●</span> Ei jatka: <b>${s.notContinuing||0}</b></div><div><span style="color:#3b82f6">●</span> Vapaa: <b>${s.free||0}</b></div><div class="loc-revenue">${fmt(s.m)} €/kk · ${fmt(s.s)} €/kausi</div></div></div>`}
