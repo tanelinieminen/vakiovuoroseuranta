@@ -407,7 +407,8 @@ function calcStats(){
 function render(){
   if(!dbReady)return;
   const st=calcStats();const sell=st.total-st.notForSale;const occ=sell>0?((st.booked+st.pending)/sell*100):0;
-  document.getElementById("quickStats").innerHTML=`<span>Varausaste: <b style="color:var(--yellow)">${occ.toFixed(0)}%</b></span><span>Myyty: <b style="color:#22c55e">${st.booked}</b></span><span>Odottaa: <b style="color:#facc15">${st.pending}</b></span><span>Ei jatka: <b style="color:#ef4444">${st.notContinuing}</b></span><span>Vapaa: <b style="color:#3b82f6">${st.free}</b></span><span>Jonossa: <b style="color:#a855f7">${totalWl()}</b></span><span style="margin-left:auto"><b style="color:var(--yellow)">${fmt(st.revM)} €/kk</b></span>`;
+  const primeSell=st.prime.total-st.prime.notForSale,primeOcc=primeSell>0?((st.prime.booked+st.prime.pending)/primeSell*100):0,primeFree=primeSell-(st.prime.booked+st.prime.pending);
+  document.getElementById("quickStats").innerHTML=`<span>Varausaste: <b style="color:var(--yellow)">${occ.toFixed(0)}%</b></span><span>Primetime: <b style="color:#f97316">${primeOcc.toFixed(0)}%</b></span><span>PT vapaa: <b style="color:#f97316">${primeFree}</b></span><span>Myyty: <b style="color:#22c55e">${st.booked}</b></span><span>Odottaa: <b style="color:#facc15">${st.pending}</b></span><span>Ei jatka: <b style="color:#ef4444">${st.notContinuing}</b></span><span>Vapaa: <b style="color:#3b82f6">${st.free}</b></span><span>Jonossa: <b style="color:#a855f7">${totalWl()}</b></span><span style="margin-left:auto"><b style="color:var(--yellow)">${fmt(st.revM)} €/kk</b></span>`;
   const twl=totalWl();document.getElementById("wlTab").textContent=`Jonolista${twl?` (${twl})`:""}`;
   ["grid","analytics","customers","waitlist"].forEach(v=>{document.getElementById("view"+v.charAt(0).toUpperCase()+v.slice(1)).classList.toggle("hidden",activeView!==v)});
   if(activeView==="grid")renderGrid(st);
