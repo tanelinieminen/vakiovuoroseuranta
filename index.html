@@ -250,7 +250,7 @@ const TIMES=["7:30-9:00","9:00-10:30","10:30-12:00","12:00-13:30","13:30-15:00",
 const ST={booked:{label:"Myyty",color:"#22c55e",bg:"#052e16"},pending:{label:"Odottaa",color:"#facc15",bg:"#422006"},notContinuing:{label:"Ei jatka",color:"#ef4444",bg:"#450a0a"},notForSale:{label:"Ei myydä",color:"#6b7280",bg:"#1f2937"},free:{label:"Vapaa",color:"#3b82f6",bg:"#0c1929"}};
 
 function buildInit(){
-  const d={},s=(l,dy,t,c,cu)=>{d[`${l}|${dy}|${t}|${c}`]={status:"booked",customer:cu,notes:""}};
+  const d={},s=(l,dy,t,c,cu)=>{d[`${l}|${dy}|${t}|${c}`]={status:"pending",customer:cu,notes:""}};
   s("Salmisaari","Maanantai","16:30-18:00",2,"KIHNIÄ");s("Salmisaari","Maanantai","16:30-18:00",3,"KIHNIÄ");
   s("Salmisaari","Maanantai","18:00-19:30",1,"STRAND");s("Salmisaari","Maanantai","18:00-19:30",2,"BORGMAN");
   s("Salmisaari","Maanantai","18:00-19:30",3,"JÄRVINEN");s("Salmisaari","Maanantai","18:00-19:30",4,"FLINCK");
