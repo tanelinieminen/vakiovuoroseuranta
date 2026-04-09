@@ -336,6 +336,14 @@ const MIGRATIONS = {
       if(!slots[k]||slots[k].status==='free'){slots[k]={status:'notForSale',customer:'',notes:''};changed=true}
     }
     return changed;
+  },
+  'v3_kentta_pasila3_salm5_ei_myynta': function() {
+    let changed = false;
+    for(const day of DAYS)for(const t of TIMES){
+      const keys=[`Pasila|${day}|${t}|3`,`Salmisaari|${day}|${t}|5`];
+      for(const k of keys)if(!slots[k]||slots[k].status==='free'){slots[k]={status:'notForSale',customer:'',notes:''};changed=true}
+    }
+    return changed;
   }
 };
 
@@ -390,6 +398,7 @@ function flashSaved(){
 
 // ─── ANALYTICS ───
 const PRIME_TIMES=["16:30-18:00","18:00-19:30","19:30-21:00"];
+const PRIME_DAYS=["Maanantai","Tiistai","Keskiviikko","Torstai"];
 function calcStats(){
   const st={total:0,booked:0,pending:0,notContinuing:0,notForSale:0,free:0,revM:0,revS:0,byLoc:{},byDay:{},prime:{total:0,booked:0,pending:0,notForSale:0}};
   for(const loc of Object.keys(LOCS))st.byLoc[loc]={total:0,booked:0,pending:0,free:0,notContinuing:0,notForSale:0,m:0,s:0,prime:{total:0,booked:0,pending:0,notForSale:0}};
@@ -397,7 +406,7 @@ function calcStats(){
   for(const loc of Object.keys(LOCS))for(const day of DAYS)for(const time of TIMES)for(const c of LOCS[loc]){
     const sl=getSlot(loc,day,time,c);st.total++;st[sl.status]++;
     st.byLoc[loc].total++;st.byLoc[loc][sl.status]++;st.byDay[day].total++;st.byDay[day][sl.status]++;
-    if(PRIME_TIMES.includes(time)){st.prime.total++;st.byLoc[loc].prime.total++;if(sl.status==="notForSale"){st.prime.notForSale++;st.byLoc[loc].prime.notForSale++}else if(sl.status==="booked"){st.prime.booked++;st.byLoc[loc].prime.booked++}else if(sl.status==="pending"){st.prime.pending++;st.byLoc[loc].prime.pending++}}
+    if(PRIME_TIMES.includes(time)&&PRIME_DAYS.includes(day)){st.prime.total++;st.byLoc[loc].prime.total++;if(sl.status==="notForSale"){st.prime.notForSale++;st.byLoc[loc].prime.notForSale++}else if(sl.status==="booked"){st.prime.booked++;st.byLoc[loc].prime.booked++}else if(sl.status==="pending"){st.prime.pending++;st.byLoc[loc].prime.pending++}}
     if(sl.status==="booked"||sl.status==="pending"){const p=PRICES[getPriceCat(day,time.split("-")[0])];if(p){st.revM+=p.monthly;st.revS+=p.season;st.byLoc[loc].m+=p.monthly;st.byLoc[loc].s+=p.season;st.byDay[day].m+=p.monthly;st.byDay[day].s+=p.season}}
   }
   return st;
