@@ -61,7 +61,7 @@ th:first-child{text-align:left;padding-left:10px;width:80px}
 td{padding:2px 3px;border-bottom:1px solid var(--border);text-align:center}
 td:first-child{padding:4px 10px;text-align:left;font-family:var(--mono);font-size:11px;white-space:nowrap}
 
-.slot-btn{width:100%;padding:5px 4px;border-radius:5px;border:none;font-size:10px;font-weight:600;font-family:var(--font);transition:all .12s;display:flex;flex-direction:column;align-items:center;min-height:28px;position:relative;cursor:pointer}
+.slot-btn{width:100%;padding:6px 4px;border-radius:5px;border:none;font-size:12px;font-weight:700;font-family:var(--font);transition:all .12s;display:flex;flex-direction:column;align-items:center;min-height:32px;position:relative;cursor:pointer}
 .slot-btn:hover{filter:brightness(1.3)}
 .wl-badge{position:absolute;top:-4px;right:-4px;background:#a855f7;color:#fff;font-size:8px;font-weight:700;width:14px;height:14px;border-radius:99px;display:flex;align-items:center;justify-content:center;border:1px solid var(--bg)}
 
@@ -250,7 +250,7 @@ function getPriceCat(day,time){const t=parseInt(time.split(":")[0])+(parseInt(ti
 const LOCS={Salmisaari:[1,2,3,4,5],Pasila:[1,2,3]};
 const DAYS=["Maanantai","Tiistai","Keskiviikko","Torstai","Perjantai","Sunnuntai"];
 const TIMES=["7:30-9:00","9:00-10:30","10:30-12:00","12:00-13:30","13:30-15:00","15:00-16:30","16:30-18:00","18:00-19:30","19:30-21:00","21:00-22:30"];
-const ST={booked:{label:"Myyty",color:"#22c55e",bg:"#052e16"},pending:{label:"Odottaa",color:"#facc15",bg:"#422006"},notContinuing:{label:"Ei jatka",color:"#ef4444",bg:"#450a0a"},notForSale:{label:"Ei myydä",color:"#6b7280",bg:"#1f2937"},free:{label:"Vapaa",color:"#3b82f6",bg:"#0c1929"}};
+const ST={booked:{label:"Myyty",color:"#fff",bg:"#16a34a"},pending:{label:"Odottaa",color:"#facc15",bg:"#422006"},notContinuing:{label:"Ei jatka",color:"#ef4444",bg:"#450a0a"},notForSale:{label:"Ei myydä",color:"#6b7280",bg:"#1f2937"},free:{label:"Vapaa",color:"#3b82f6",bg:"#0c1929"}};
 
 function buildInit(){
   const d={},s=(l,dy,t,c,cu)=>{d[`${l}|${dy}|${t}|${c}`]={status:"pending",customer:cu,notes:""}};
